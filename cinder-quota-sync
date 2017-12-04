@@ -32,6 +32,7 @@ from sqlalchemy import select
 from sqlalchemy import Table
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql.expression import false
 from sqlalchemy.ext.declarative import declarative_base
 
 
@@ -43,7 +44,7 @@ def get_projects(meta):
     volumes_t = Table('volumes', meta, autoload=True)
     volumes_q = select(columns=[volumes_t.c.project_id,
                                 func.count()],
-                       whereclause=and_(volumes_t.c.deleted == 0),
+                       whereclause=and_(volumes_t.c.deleted == false()),
                        group_by=volumes_t.c.project_id)
     for (project, _) in volumes_q.execute():
         projects.append(project)
@@ -92,7 +93,7 @@ def get_snapshot_usages_project(meta, project_id):
                                   snapshots_t.c.volume_size,
                                   snapshots_t.c.volume_type_id],
                          whereclause=and_(
-                         snapshots_t.c.deleted == 0,
+                         snapshots_t.c.deleted == false(),
                          snapshots_t.c.project_id == project_id))
     return snapshots_q.execute()
 
@@ -105,7 +106,7 @@ def get_volume_usages_project(meta, project_id):
     volumes_q = select(columns=[volumes_t.c.id,
                                 volumes_t.c.size,
                                 volumes_t.c.volume_type_id],
-                       whereclause=and_(volumes_t.c.deleted == 0,
+                       whereclause=and_(volumes_t.c.deleted == false(),
                                         volumes_t.c.project_id == project_id))
     return volumes_q.execute()
 
@@ -117,7 +118,7 @@ def get_quota_usages_project(meta, project_id):
     quota_usages_t = Table('quota_usages', meta, autoload=True)
     quota_usages_q = select(columns=[quota_usages_t.c.resource,
                                      quota_usages_t.c.in_use],
-                            whereclause=and_(quota_usages_t.c.deleted == 0,
+                            whereclause=and_(quota_usages_t.c.deleted == false(),
                                              quota_usages_t.c.project_id ==
                                              project_id))
     return quota_usages_q.execute()
@@ -131,7 +132,7 @@ def get_resource_types(meta, project_id):
     quota_usages_t = Table('quota_usages', meta, autoload=True)
     resource_types_q = select(columns=[quota_usages_t.c.resource,
                                        func.count()],
-                              whereclause=quota_usages_t.c.deleted == 0,
+                              whereclause=quota_usages_t.c.deleted == false(),
                               group_by=quota_usages_t.c.resource)
     for (resource, _) in resource_types_q.execute():
         types.append(resource)
@@ -146,7 +147,7 @@ def get_volume_types(meta, project_id):
     volume_types_t = Table('volume_types', meta, autoload=True)
     volume_types_q = select(columns=[volume_types_t.c.id,
                                      volume_types_t.c.name],
-                            whereclause=volume_types_t.c.deleted == 0)
+                            whereclause=volume_types_t.c.deleted == false())
     for (id, name) in volume_types_q.execute():
         types[id] = name
     return types
